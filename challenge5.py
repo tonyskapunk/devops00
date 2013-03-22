@@ -31,7 +31,7 @@ parser.add_argument('-d', '--database', metavar='DBNAME', required=False,
                     help='Name to use for the DB.')
 parser.add_argument('-f', '--flavor', metavar='FLAVOR',required=False,
                     help='DB Flavor, default 512.',default=512, type=int)
-parser.add_argument('-i', '--instance', metavar='INST_NAME', required=False,
+parser.add_argument('-i', '--instancename', metavar='INSTNAME', required=False,
                     help='Name to use for the instance.')
 parser.add_argument('-s', '--size', metavar='SIZE', default=1, type=int,
                     help='Size in GB of the instance [1-50].')
@@ -50,7 +50,7 @@ if args.size < 1 or args.size > 50:
     sys.exit(1)
 
 dbname = randomStr(8) if not args.database else args.database
-instance = randomStr(8) if not args.instance else args.instance
+instancename = randomStr(8) if not args.instancename else args.instancename
 username = randomStr(8) if not args.username else args.username
 password = randomStr(12)
 
@@ -63,37 +63,39 @@ if args.flavor not in flavors:
     listFlavors()
 flavor = [flv for flv in flvs if flv.ram == args.flavor][0]
 
-# instance creation
-# TODO: validate the instance is not already created?
-ins = cdb.create(instance, flavor=flavor, volume=args.size)
-print "Building instance. This takes about 2 min."
-time.sleep(90)
-
-# db creation on the instance
-# TODO: validate the db is not already created
+# Instance creation
+ins = None
+if [ins for ins in cdb.list() if ins.name == instancename]:
+    print "Instance already created."
+else:
+    ins = cdb.create(instancename, flavor=flavor, volume=args.size)
+    print "Building instance. This takes about 2 min."
+    time.sleep(90)
 while True:
-    # TODO: find a way to get the instance by id
+    # TODO: find a way to get the instance by id!
     my_ins = [tmp_ins for tmp_ins in cdb.list() if tmp_ins.id == ins.id][0]
     if my_ins.status == 'ACTIVE':
-        print "Name: %s Hostname: %s Status: %s" % (my_ins.name, 
-                                                    my_ins.hostname,
-                                                    my_ins.status)
         break
     elif my_ins.status == 'ERROR':
-        print "There was an error when building the Instance, please try again."
+        print "Oops an error occur!, please try again."
+        my_ins.delete()
         sys.exit(1)
     time.sleep (5)
 
-db = ins.create_database(dbname)
-print "DBName: %s" % dbname
+# DB creation on the instance.
+db = None
+for db in ins.list_databases():
+    if db.name == dbname:
+        print "DB already created."
+        break
+    else:
+        db = ins.create_database(dbname)
 
-# user creation on the db
-# TODO: validate the user is not already created
-user = ins.create_user(username, password, database_names=[dbname])
-print "User: %s Password: %s" % (username, password)
-
+# user creation on the instance/db
+if not [user for user in ins.list_users() if user.name == username]:
+    user = ins.create_user(username, password, database_names=[dbname])
+else:
+    password = "<your_password>"
+    print "User already in place"
+print "Connect using:\nmysql -h%s -u%s -p%s %s" % (ins.hostname, username, password, dbname)
 sys.exit(0)
-# listing DBs in the instance
-###dbs = inst.list_databases()
-###for db in dbs:
-###    print db.name
