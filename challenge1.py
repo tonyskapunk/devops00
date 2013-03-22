@@ -23,25 +23,22 @@ flavor = [flv for flv in flvs if flv.ram == size][0]
 
 print "Requesting  %s servers with prename: %s" % (count, name)
 for index in range(count):
-    server = {}
-    s = cs.servers.create("%s%s" % (name, index), image, flavor)
-    server[s.id] = s.adminPass
-    servers.append(server)
+     servers.append(cs.servers.create("%s%s" % (name, index), image, flavor))
 print "Building Servers. Might take about  %s secs..." % (20*count)
 time.sleep(20*count)
 while True:
     if not servers:
         break
-    server = servers[0]
+    s = servers[0]
     del servers[0]
-    s = cs.servers.get(server.keys()[0])
+    s.get()
     if s.networks:
         public = s.networks['public']
         if ":" in public[0]:
             publicv4 = public[1]
         else:
             publicv4 = public[0]
-        print "%s: %s / %s" % (s.name, publicv4, server[server.keys()[0]])
+        print "%s: %s / %s" % (s.name, publicv4, s.adminPass)
     else:
-        servers.append(server)
+        servers.append(s)
     time.sleep(delay)
