@@ -73,10 +73,6 @@ def createNodes(srvs, port):
           nodes.append(node)
      return nodes
 
-def deleteNodes(nodes):
-     for node in nodes:
-          print node
-     
 def createVIP():
      return clb.VirtualIP(type="PUBLIC")
 
