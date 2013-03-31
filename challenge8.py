@@ -6,7 +6,7 @@ import re
 import sys
 from challenge3 import *
 from challenge4 import *
-from pyrax import cloudfiles
+from pyrax import cloudfiles as cf
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Cloud File Creator.')
@@ -24,18 +24,18 @@ if __name__ == '__main__':
     container = randomStr(8) if not args.container else args.container
     if not isContainer(container):
         print "Creating container: %s" % (container)
-        cont = cloudfiles.create_container(container)
+        cont = cf.create_container(container)
     else:
         print "Container %s already in place." % (container)
-        cont = cloudfiles.get_container(container)
+        cont = cf.get_container(container)
     # enable Static Website on container
-    cloudfiles.set_container_web_index_page(container, 'index.html')
+    cf.set_container_web_index_page(container, 'index.html')
     # Activate CDN
     cont.make_public(ttl=600)
     index = """<html>\n<head>\n<title>Challenge 8\n</title>\n</head>\n<body>
 <h1>Challenge 8</h1>\nfoo bar baz\n</body>\n</html>"""
     # Upload object
-    obj = cloudfiles.store_object(container, 'index.html', index)
+    obj = cf.store_object(container, 'index.html', index)
     cdn_uri = re.sub('http://', '', cont.cdn_uri)
     # Add CNAME
     addRecord(args.fqdn, cdn_uri, type='CNAME')
