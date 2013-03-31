@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-from challenge3 import *
-from challenge4 import *
-from pyrax import cloudfiles
 import argparse
 import auth
 import re
 import sys
+from challenge3 import *
+from challenge4 import *
+from pyrax import cloudfiles
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Cloud File Creator.')
