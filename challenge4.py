@@ -30,14 +30,14 @@ def validateIPv4(ip):
         sys.exit(1)
     return ip
 
-def addRecord(fqdn, ip, type='A', ttl=300):
+def addRecord(fqdn, data, type='A', ttl=300):
     domainname = getDomain(fqdn)
     domain = dns.find(name=domainname)
     rec = {"type": type,
            "name": fqdn,
-           "data": ip,
+           "data": data,
            "ttl": ttl}
-    if domain.search_records('A', name=fqdn, data=ip):
+    if domain.search_records('A', name=fqdn, data=data):
         print "Record already in place"
         sys.exit(1)
     try:
@@ -50,7 +50,7 @@ def addRecord(fqdn, ip, type='A', ttl=300):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='CloudDNS. A Record Creation.')
-    parser.add_argument('--fqdn', metavar='FQDN', required=True,
+    parser.add_argument('-f', '--fqdn', metavar='FQDN', required=True,
                         help='FQDN to add as an A Record.')
     parser.add_argument('--ip', metavar='IPV4', required=True,
                         help='IPv4 to use on the A Record.')
