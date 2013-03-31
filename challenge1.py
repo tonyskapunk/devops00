@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 import argparse
+import auth
 import os
-import pyrax
 import re
 import time
 import sys
+from pyrax import cloudservers as cs
 
 def imageList():
      print "Available Images:"
@@ -24,16 +25,16 @@ def getImage(imagename):
      return [img for img in cs.images.list() if imagename in img.name.lower()][0]
 
 def isValidImage(image):
-    for img in cs.images.list():
-         if str(image).lower() in img.name.lower():
-              return True
-    return False
+     for img in cs.images.list():
+          if str(image).lower() in img.name.lower():
+               return True
+     return False
 
 def isValidFlavor(flavor):
-    for flv in cs.flavors.list():
-         if flv.ram == flavor:
-              return True
-    return False
+     for flv in cs.flavors.list():
+          if flv.ram == flavor:
+               return True
+     return False
 
 def randomStr(length):
      return re.sub('\W','',os.urandom(200))[:length]
@@ -91,10 +92,6 @@ if __name__ == '__main__':
      parser.add_argument('-s', '--server-prefix', metavar='NAME',
                          help='Prefix name for the Cloud Servers.')
      args = parser.parse_args()
-
-     creds_file = os.path.expanduser("~/.rackspace_cloud_credentials")
-     pyrax.set_credential_file(creds_file)
-     cs = pyrax.cloudservers
 
      if args.flavor_list:
           flavorList()
