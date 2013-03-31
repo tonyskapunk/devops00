@@ -2,10 +2,9 @@
 
 import auth
 import argparse
-import os
-from pyrax import cloud_dns, exceptions
 import re
 import sys
+from pyrax import cloud_dns, exceptions
 
 def getDomain(fqdn):
     if not re.search('^(\w+\.)+$', fqdn + '.'):
