@@ -3,10 +3,10 @@
 import auth
 import argparse
 import os
-from pyrax import cloudfiles
-import re
 import sys
 import time
+from pyrax import cloudfiles
+from challenge1 import randomStr
 
 def listContainers():
     print "Available Containers:"
@@ -22,9 +22,6 @@ def isContainer(container):
             ret = True
             break
     return ret
-        
-def randomStr(length):
-    return re.sub('\W','',os.urandom(200))[:length]
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Cloud File Creator.')
