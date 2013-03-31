@@ -1,22 +1,23 @@
 #!/usr/bin/env python
 
+import auth
 import argparse
 import os
-import pyrax
+from pyrax import cloudfiles
 import re
 import sys
 import time
 
 def listContainers():
     print "Available Containers:"
-    for container in cf.list_containers():
+    for container in cloudfiles.list_containers():
         print "%s" % (container)
-    print cf.get_all_containers()
+    print cloudfiles.get_all_containers()
     sys.exit(0)
 
 def isContainer(container):
     ret = False
-    for cont in cf.list_containers():
+    for cont in cloudfiles.list_containers():
         if cont == container:
             ret = True
             break
@@ -35,10 +36,6 @@ if __name__ == '__main__':
                         help='Prints the available containers of Cloud Files')
     args = parser.parse_args()
 
-    creds_file = os.path.expanduser("~/.rackspace_cloud_credentials")
-    pyrax.set_credential_file(creds_file)
-    cf = pyrax.cloudfiles
-
     if args.list_containers:
         listContainers()
 
@@ -54,15 +51,15 @@ if __name__ == '__main__':
     container = randomStr(8) if not args.container else args.container
     if not isContainer(container):
         print "Creating container: %s" % (container)
-        cont = cf.create_container(container)
+        cont = cloudfiles.create_container(container)
     else:
         print "Container %s already in place." % (container)
 
-    upload_key, bytes = cf.upload_folder(dir, container)
+    upload_key, bytes = cloudfiles.upload_folder(dir, container)
     uploaded = 0
     print "Uploading %s bytes." % (bytes)
     while uploaded < bytes:
-        uploaded = cf.get_uploaded(upload_key)
+        uploaded = cloudfiles.get_uploaded(upload_key)
         print "\r%4.2f%% Completed." % ((uploaded * 100.0) / bytes)
         time.sleep(2)
     sys.exit(0)
