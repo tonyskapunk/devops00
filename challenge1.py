@@ -3,6 +3,7 @@
 import argparse
 import os
 import pyrax
+import re
 import time
 import sys
 
@@ -33,6 +34,9 @@ def isValidFlavor(flavor):
          if flv.ram == flavor:
               return True
     return False
+
+def randomStr(length):
+     return re.sub('\W','',os.urandom(200))[:length]
 
 def createServers(count, name, image, flavor):
      servers = []
