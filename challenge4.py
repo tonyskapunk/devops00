@@ -48,18 +48,21 @@ def addRecord(fqdn, ip, type='A', ttl=300):
     else:
         print "Record successfully Added!"
 
-creds_file = os.path.expanduser("~/.rackspace_cloud_credentials")
-pyrax.set_credential_file(creds_file)
-dns = pyrax.cloud_dns
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='CloudDNS. A Record Creation.')
+    parser.add_argument('--fqdn', metavar='FQDN', required=True,
+                        help='FQDN to add as an A Record.')
+    parser.add_argument('--ip', metavar='IPV4', required=True,
+                        help='IPv4 to use on the A Record.')
+    args = parser.parse_args()
 
-parser = argparse.ArgumentParser(description='Cloud DNS, A Record Creation.')
-parser.add_argument('--fqdn', metavar='FQDN', help='FQDN to add as an A Record.', required=True)
-parser.add_argument('--ip', metavar='IPV4', help='IPv4 to use on the A Record.', required=True)
-args = parser.parse_args()
+    creds_file = os.path.expanduser("~/.rackspace_cloud_credentials")
+    pyrax.set_credential_file(creds_file)
+    dns = pyrax.cloud_dns
 
-if not args.fqdn or not args.ip: 
-    parser.print_help()
-    sys.exit(1)
+    if not args.fqdn or not args.ip: 
+        parser.print_help()
+        sys.exit(1)
 
-addRecord(args.fqdn,validateIPv4(args.ip))
-sys.exit(0)
+    addRecord(args.fqdn,validateIPv4(args.ip))
+    sys.exit(0)
