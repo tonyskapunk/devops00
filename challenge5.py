@@ -22,80 +22,81 @@ def listFlavors():
 def randomStr(length):
     return re.sub('\W','',os.urandom(200))[:length]
 
-creds_file = os.path.expanduser("~/.rackspace_cloud_credentials")
-pyrax.set_credential_file(creds_file)
-cdb = pyrax.cloud_databases
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Cloud DB Creator.')
+    parser.add_argument('-d', '--database', metavar='DBNAME', required=False,
+                        help='Name to use for the DB.')
+    parser.add_argument('-f', '--flavor', metavar='FLAVOR',required=False,
+                        help='DB Flavor, default 512.',default=512, type=int)
+    parser.add_argument('-i', '--instancename', metavar='INSTNAME', 
+                        required=False, help='Name to use for the instance.')
+    parser.add_argument('-s', '--size', metavar='SIZE', default=1, type=int,
+                        help='Size in GB of the instance [1-50].')
+    parser.add_argument('-u', '--username', metavar='USERNAME',  required=False,
+                        help='USERNAME to use for the DB.')
+    parser.add_argument('-l', '--list-flavors', action='store_true', 
+                        default=False,required=False, 
+                        help='Prints the available flavors of Cloud DBs.')
+    args = parser.parse_args()
 
-parser = argparse.ArgumentParser(description='Cloud DB Creator.')
-parser.add_argument('-d', '--database', metavar='DBNAME', required=False,
-                    help='Name to use for the DB.')
-parser.add_argument('-f', '--flavor', metavar='FLAVOR',required=False,
-                    help='DB Flavor, default 512.',default=512, type=int)
-parser.add_argument('-i', '--instancename', metavar='INSTNAME', required=False,
-                    help='Name to use for the instance.')
-parser.add_argument('-s', '--size', metavar='SIZE', default=1, type=int,
-                    help='Size in GB of the instance [1-50].')
-parser.add_argument('-u', '--username', metavar='USERNAME',  required=False,
-                    help='USERNAME to use for the DB.')
-parser.add_argument('-l', '--list-flavors', action='store_true', default=False,
-                    help='Prints the available flavors of Cloud DBs.',
-                    required=False)
-args = parser.parse_args()
+    creds_file = os.path.expanduser("~/.rackspace_cloud_credentials")
+    pyrax.set_credential_file(creds_file)
+    cdb = pyrax.cloud_databases
 
-if args.list_flavors:
-    listFlavors()
+    if args.list_flavors:
+        listFlavors()
 
-if args.size < 1 or args.size > 50:
-    print "Size out of range."
-    sys.exit(1)
-
-dbname = randomStr(8) if not args.database else args.database
-instancename = randomStr(8) if not args.instancename else args.instancename
-username = randomStr(8) if not args.username else args.username
-password = randomStr(12)
-
-flvs = cdb.list_flavors()
-flavors = []
-for flv in flvs:
-    flavors.append(flv.ram)
-if args.flavor not in flavors:
-    print "%s is an Invalid Flavor!" % args.flavor
-    listFlavors()
-flavor = [flv for flv in flvs if flv.ram == args.flavor][0]
-
-# Instance creation
-ins = None
-if [ins for ins in cdb.list() if ins.name == instancename]:
-    print "Instance already created."
-else:
-    ins = cdb.create(instancename, flavor=flavor, volume=args.size)
-    print "Building instance. This takes about 2 min."
-    time.sleep(90)
-while True:
-    # TODO: find a way to get the instance by id!
-    my_ins = [tmp_ins for tmp_ins in cdb.list() if tmp_ins.id == ins.id][0]
-    if my_ins.status == 'ACTIVE':
-        break
-    elif my_ins.status == 'ERROR':
-        print "Oops an error occur!, please try again."
-        my_ins.delete()
+    if args.size < 1 or args.size > 50:
+        print "Size out of range."
         sys.exit(1)
-    time.sleep (5)
 
-# DB creation on the instance.
-db = None
-for db in ins.list_databases():
-    if db.name == dbname:
-        print "DB already created."
-        break
+    dbname = randomStr(8) if not args.database else args.database
+    instancename = randomStr(8) if not args.instancename else args.instancename
+    username = randomStr(8) if not args.username else args.username
+    password = randomStr(12)
+
+    flvs = cdb.list_flavors()
+    flavors = []
+    for flv in flvs:
+        flavors.append(flv.ram)
+    if args.flavor not in flavors:
+        print "%s is an Invalid Flavor!" % args.flavor
+        listFlavors()
+    flavor = [flv for flv in flvs if flv.ram == args.flavor][0]
+
+    # Instance creation
+    ins = None
+    if [ins for ins in cdb.list() if ins.name == instancename]:
+        print "Instance already created."
     else:
-        db = ins.create_database(dbname)
+        ins = cdb.create(instancename, flavor=flavor, volume=args.size)
+        print "Building instance. This takes about 2 min."
+        time.sleep(90)
+    while True:
+        # TODO: find a way to get the instance by id!
+        my_ins = [tmp_ins for tmp_ins in cdb.list() if tmp_ins.id == ins.id][0]
+        if my_ins.status == 'ACTIVE':
+            break
+        elif my_ins.status == 'ERROR':
+            print "Oops an error occur!, please try again."
+            my_ins.delete()
+            sys.exit(1)
+        time.sleep (5)
 
-# user creation on the instance/db
-if not [user for user in ins.list_users() if user.name == username]:
-    user = ins.create_user(username, password, database_names=[dbname])
-else:
-    password = "<your_password>"
-    print "User already in place"
-print "Connect using:\nmysql -h%s -u%s -p%s %s" % (ins.hostname, username, password, dbname)
-sys.exit(0)
+    # DB creation on the instance.
+    db = None
+    for db in ins.list_databases():
+        if db.name == dbname:
+            print "DB already created."
+            break
+        else:
+            db = ins.create_database(dbname)
+
+    # user creation on the instance/db
+    if not [user for user in ins.list_users() if user.name == username]:
+        user = ins.create_user(username, password, database_names=[dbname])
+    else:
+        password = "<your_password>"
+        print "User already in place"
+    print "Connect using:\nmysql -h%s -u%s -p%s %s" % (ins.hostname, username, password, dbname)
+    sys.exit(0)
