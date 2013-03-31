@@ -1,21 +1,10 @@
 #!/usr/bin/env python
 
 import argparse
-import os
-import pyrax
-import re
+import auth
 import sys
-import time
-
-def imageList():
-     print "Available Images:"
-     for img in cs.images.list():
-          print img.name.lower()
-
-def flavorList():
-     print "Available Flavors:"
-     for flv in cs.flavors.list():
-          print flv.ram
+from pyrax import cloud_loadbalancers as clb
+from challenge1 import *
 
 def protocolList():
      print "Available Protocols:"
@@ -26,18 +15,6 @@ def algorithmList():
      print "Available Algorithms:"
      for algo in clb.algorithms:
           print algo.lower()
-
-def isValidImage(image):
-    for img in cs.images.list():
-         if str(image).lower() in img.name.lower():
-              return True
-    return False
-
-def isValidFlavor(flavor):
-    for flv in cs.flavors.list():
-         if flv.ram == flavor:
-              return True
-    return False
 
 def isValidAlgorithm(algorithm):
      for algo in clb.algorithms:
@@ -76,53 +53,6 @@ def createNodes(srvs, port):
 def createVIP():
      return clb.VirtualIP(type="PUBLIC")
 
-def randomStr(length):
-    return re.sub('\W','',os.urandom(200))[:length]
-
-def getFlavor(flavorname):
-     return [flv for flv in cs.flavors.list() if flv.ram == flavorname][0]
-
-def getImage(imagename):
-     return [img for img in cs.images.list() if imagename in img.name.lower()][0]
-
-def createServers(count, name, image, flavor):
-     servers = []
-     srvs = []
-     delay = 5
-     build_time = 240 + delay * count
-     for index in range(count):
-          tmp_srv = cs.servers.create("%s%s" % (name, index), image, flavor)
-          servers.append(tmp_srv)
-     print "Building Servers. Might take about  %s secs..." % (build_time)
-     time.sleep(build_time)
-     servertime = build_time
-     while True:
-          if not servers:
-               break
-          s = servers[0]
-          del servers[0]
-          s.get()
-          if s.status == 'ACTIVE':
-               if s.networks:
-                    public = s.networks['public']
-                    if ":" in public[0]:
-                         publicv4 = public[1]
-                    else:
-                         publicv4 = public[0]
-                    print "%s: %s / %s" % (s.name, publicv4, s.adminPass)
-                    srvs.append(s)
-               else:
-                    print "Server is Active but no network info found yet."
-          elif s.status == "ERROR":
-               print "Alas! something went wrong, rebuilding %s." % s.name
-               s.delete()
-               s = cs.servers.create(s.name, image, flavor)
-               servers.append(s)
-          else:
-               servers.append(s)
-          time.sleep(delay)
-     return srvs
-
 if __name__ == '__main__':
      parser = argparse.ArgumentParser(description='Cloud LBs Creator.')
      parser.add_argument('-a', '--algorithm', metavar='ALGORITHM', 
@@ -154,11 +84,6 @@ if __name__ == '__main__':
      parser.add_argument('-s', '--server-prefix', metavar='NAME',
                          help='Prefix name for the Cloud Servers.')
      args = parser.parse_args()
-
-     creds_file = os.path.expanduser("~/.rackspace_cloud_credentials")
-     pyrax.set_credential_file(creds_file)
-     cs = pyrax.cloudservers
-     clb = pyrax.cloud_loadbalancers
 
      if args.flavor_list:
           flavorList()
