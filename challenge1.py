@@ -46,7 +46,8 @@ def createServers(count, name, image, flavor):
      delay = 5
      build_time = 240 + delay * count
      for index in range(count):
-          tmp_srv = cs.servers.create("%s%s" % (name, index), image, flavor)
+          sname = name if count == 1 else "%s%s" % (name, index)
+          tmp_srv = cs.servers.create(sname, image, flavor)
           servers.append(tmp_srv)
      print "Building Servers. Might take about  %s secs..." % (build_time)
      time.sleep(build_time)
