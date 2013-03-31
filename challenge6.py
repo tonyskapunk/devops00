@@ -1,29 +1,12 @@
 #!/usr/bin/env python
 
 import argparse
-import os
-import pyrax
-import re
+import auth
 import sys
-import time
+from pyrax import cloudfiles as cf 
+from challenge1 import randomStr
+from challenge3 import *
 
-def listContainers():
-    print "Available Containers:"
-    for container in cf.list_containers():
-        print "%s" % (container)
-    print cf.get_all_containers()
-    sys.exit(0)
-
-def isContainer(container):
-    ret = False
-    for cont in cf.list_containers():
-        if cont == container:
-            ret = True
-            break
-    return ret
-        
-def randomStr(length):
-    return re.sub('\W','',os.urandom(200))[:length]
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Cloud File CDN Creator.')
     parser.add_argument('-c', '--container', metavar='NAME', 
@@ -31,11 +14,6 @@ if __name__ == '__main__':
     parser.add_argument('-l', '--list-containers', action='store_true',
                         help='Prints the available containers of Cloud Files')
     args = parser.parse_args()
-
-    creds_file = os.path.expanduser("~/.rackspace_cloud_credentials")
-    pyrax.set_credential_file(creds_file)
-    cf = pyrax.cloudfiles
-
 
     if args.list_containers:
         listContainers()
