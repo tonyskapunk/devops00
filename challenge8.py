@@ -9,7 +9,7 @@ from challenge4 import *
 from pyrax import cloudfiles as cf
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Cloud File Creator.')
+    parser = argparse.ArgumentParser(description='Static Web Page Creator.')
     parser.add_argument('-c', '--container', metavar='NAME',
                         help='Container name')
     parser.add_argument('-f', '--fqdn', metavar='FQDN', required=True,
