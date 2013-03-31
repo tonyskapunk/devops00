@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
+import auth
 import argparse
 import os
-import pyrax
+from pyrax import cloud_dns, exceptions
 import re
 import sys
 
@@ -14,8 +15,8 @@ def getDomain(fqdn):
     while domainname.count('.') > 1:
         domainname = domainname[domainname.find('.') + 1:]
         try:
-            domain = dns.find(name=domainname)
-        except pyrax.exceptions.NotFound:
+            domain = cloud_dns.find(name=domainname)
+        except exceptions.NotFound:
             #print "Failed attempting using %s as domain." % domainname
             pass
         else:
@@ -32,7 +33,7 @@ def validateIPv4(ip):
 
 def addRecord(fqdn, data, type='A', ttl=300):
     domainname = getDomain(fqdn)
-    domain = dns.find(name=domainname)
+    domain = cloud_dns.find(name=domainname)
     rec = {"type": type,
            "name": fqdn,
            "data": data,
@@ -41,8 +42,8 @@ def addRecord(fqdn, data, type='A', ttl=300):
         print "Record already in place"
         sys.exit(1)
     try:
-        dns.add_records(domain, rec)
-    except pyrax.exceptions.DomainRecordAdditionFailed:
+        cloud_dns.add_records(domain, rec)
+    except exceptions.DomainRecordAdditionFailed:
         print "Failed adding %s to %s domain." % (fqdn, domainname)
         sys.exit(1)
     else:
@@ -56,13 +57,9 @@ if __name__ == '__main__':
                         help='IPv4 to use on the A Record.')
     args = parser.parse_args()
 
-    creds_file = os.path.expanduser("~/.rackspace_cloud_credentials")
-    pyrax.set_credential_file(creds_file)
-    dns = pyrax.cloud_dns
-
     if not args.fqdn or not args.ip: 
         parser.print_help()
         sys.exit(1)
 
-    addRecord(args.fqdn,validateIPv4(args.ip))
+    addRecord(args.fqdn, validateIPv4(args.ip))
     sys.exit(0)
