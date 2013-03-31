@@ -22,7 +22,8 @@ def getFlavor(flavorname):
      return [flv for flv in cs.flavors.list() if flv.ram == flavorname][0]
 
 def getImage(imagename):
-     return [img for img in cs.images.list() if imagename in img.name.lower()][0]
+     return [img for img in cs.images.list() if imagename.lower() in 
+             img.name.lower()][0]
 
 def isValidImage(image):
      for img in cs.images.list():
