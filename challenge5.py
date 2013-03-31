@@ -1,26 +1,25 @@
 #!/usr/bin/env python
 
 import argparse
+import auth
 import os
-import pyrax
-import re
 import sys
 import time
+from challenge1 import randomStr
+from pyrax import cloud_databases as cdb
 
-def createInstance(name, flavor, size):
-    ins = cdb.create(name, flavor=flavor, volume=size)
-    print "Name:", ins.name
-    print "ID:", ins.id
-    print "Status:", ins.status
-
-def listFlavors():
+def listDBFlavors():
     print "Available Flavors:"
     for flv in cdb.list_flavors():
         print "%s" % (flv.ram)
     sys.exit(0)
 
-def randomStr(length):
-    return re.sub('\W','',os.urandom(200))[:length]
+def isDBinInstance(ins, dbname):
+    if ins.list_databases():
+        for db in ins.list_databases():
+            if db.name == dbname:
+                return True
+    return False
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Cloud DB Creator.')
@@ -39,12 +38,8 @@ if __name__ == '__main__':
                         help='Prints the available flavors of Cloud DBs.')
     args = parser.parse_args()
 
-    creds_file = os.path.expanduser("~/.rackspace_cloud_credentials")
-    pyrax.set_credential_file(creds_file)
-    cdb = pyrax.cloud_databases
-
     if args.list_flavors:
-        listFlavors()
+        listDBFlavors()
 
     if args.size < 1 or args.size > 50:
         print "Size out of range."
@@ -61,7 +56,7 @@ if __name__ == '__main__':
         flavors.append(flv.ram)
     if args.flavor not in flavors:
         print "%s is an Invalid Flavor!" % args.flavor
-        listFlavors()
+        listDBFlavors()
     flavor = [flv for flv in flvs if flv.ram == args.flavor][0]
 
     # Instance creation
@@ -84,14 +79,8 @@ if __name__ == '__main__':
         time.sleep (5)
 
     # DB creation on the instance.
-    db = None
-    for db in ins.list_databases():
-        if db.name == dbname:
-            print "DB already created."
-            break
-        else:
-            db = ins.create_database(dbname)
-
+    if not isDBinInstance(ins, dbname):
+        db = ins.create_database(dbname)
     # user creation on the instance/db
     if not [user for user in ins.list_users() if user.name == username]:
         user = ins.create_user(username, password, database_names=[dbname])
