@@ -40,14 +40,17 @@ def isValidFlavor(flavor):
 def randomStr(length):
      return re.sub('\W','',os.urandom(200))[:length]
 
-def createServers(count, name, image, flavor):
+def createServers(count, name, image, flavor, files={}):
      servers = []
      srvs = []
      delay = 5
      build_time = 240 + delay * count
      for index in range(count):
           sname = name if count == 1 else "%s%s" % (name, index)
-          tmp_srv = cs.servers.create(sname, image, flavor)
+          if files:
+               tmp_srv = cs.servers.create(sname, image, flavor, files)
+          else:
+               tmp_srv = cs.servers.create(sname, image, flavor)
           servers.append(tmp_srv)
      print "Building Servers. Might take about  %s secs..." % (build_time)
      time.sleep(build_time)
