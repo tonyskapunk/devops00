@@ -41,7 +41,7 @@ if __name__ == '__main__':
     if args.list_flavors:
         listDBFlavors()
 
-    if args.size < 1 or args.size > 50:
+    if args.size < 1 or args.size > 150:
         print "Size out of range."
         sys.exit(1)
 
