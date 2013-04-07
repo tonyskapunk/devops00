@@ -48,7 +48,7 @@ def createServers(count, name, image, flavor, files={}):
      for index in range(count):
           sname = name if count == 1 else "%s%s" % (name, index)
           if files:
-               tmp_srv = cs.servers.create(sname, image, flavor, files)
+               tmp_srv = cs.servers.create(sname, image, flavor, fils=files)
           else:
                tmp_srv = cs.servers.create(sname, image, flavor)
           servers.append(tmp_srv)
