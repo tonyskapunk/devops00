@@ -45,8 +45,6 @@ def addRecord(fqdn, data, type='A', ttl=300):
     except exceptions.DomainRecordAdditionFailed:
         print "Failed adding %s to %s domain." % (fqdn, domainname)
         sys.exit(1)
-    else:
-        print "Record successfully Added!"
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='CloudDNS. A Record Creation.')
