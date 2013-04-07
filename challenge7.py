@@ -32,6 +32,10 @@ def createLB(lbname, algorithm, port, proto, nodes):
      vip = createVIP()
      lb = clb.create(lbname, algorithm=algorithm.upper(), port=port,
                      protocol=proto.upper(), nodes=nodes, virtual_ips=[vip])
+     while True:
+          if lb.status == 'ACTIVE':
+               break
+          time.sleep(5)
      return lb
 
 def createNodes(srvs, port):
