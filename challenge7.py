@@ -33,6 +33,7 @@ def createLB(lbname, algorithm, port, proto, nodes):
      lb = clb.create(lbname, algorithm=algorithm.upper(), port=port,
                      protocol=proto.upper(), nodes=nodes, virtual_ips=[vip])
      while True:
+          lb.get()
           if lb.status == 'ACTIVE':
                break
           time.sleep(5)
