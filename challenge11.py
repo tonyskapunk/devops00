@@ -145,30 +145,25 @@ if __name__ == '__main__':
           sys.exit(1)
      validateIPv4(ip)
      net = createNetwork(args.network_name, args.subnet)
-
      print 'Serving your request, please wait...'
      flavor = getFlavor(args.flavor)
      image = getImage(args.image)
      sname = args.server_prefix if args.server_prefix else randomStr(8)
      lbname = args.lbname if args.lbname else  randomStr(8)
-     servers = createServers(args.node_count, sname, image, flavor)
+     servers = createServers(args.node_count, sname, image, flavor,
+                             nics=net.get_server_networks(public=True,
+                                                           private=True))
+     nodes = createNodes(servers, args.port_on_nodes)
+     lb = createLB(lbname, args.algorithm, args.port, args.protocol, nodes)
+     print "LB: %s Public: %s" % (lb.name, lb.virtual_ips[0].address)
+     print 'Creating cloud blockstorage and attaching to servers.'
      for server in servers:
-          server.add_fixed_ip(args.network_name)
-          server.get()
-          print server.status
-#     nodes = createNodes(servers, args.port_on_nodes)
-#     lb = createLB(lbname, args.algorithm, args.port, args.protocol, nodes)
-#     print "LB: %s Public: %s" % (lb.name, lb.virtual_ips[0].address)
-#     print 'Creating cloud blockstorage and attaching to servers.'
-#     for server in servers:
-#          vol_name = randomStr(8)
-#          vol = cbs.create(name=vol_name, size=vol_size, volume_type=vol_type)
-#          utils.wait_until(server, "status", "ACTIVE", attempts=0, verbose=True)
-#          vol.attach_to_instance(server, mountpoint="/dev/xvdd")
-#          utils.wait_until(vol, "status", "in-use", interval=3, attempts=0, 
-#                           verbose=True)
-     lb = clb.list()[0]
-     # LB
+          vol_name = randomStr(8)
+          vol = cbs.create(name=vol_name, size=vol_size, volume_type=vol_type)
+          utils.wait_until(server, "status", "ACTIVE", attempts=0, verbose=True)
+          vol.attach_to_instance(server, mountpoint="/dev/xvdd")
+          utils.wait_until(vol, "status", "in-use", interval=3, attempts=0, 
+                           verbose=True)
      lb_ssl = lb.get_ssl_termination()
      if lb_ssl:
           print "SSL termination currently in place.\n%s" % lb_ssl
