@@ -40,17 +40,15 @@ def isValidFlavor(flavor):
 def randomStr(length):
      return re.sub('\W','',os.urandom(200))[:length]
 
-def createServers(count, name, image, flavor, files={}):
+#def createServers(count, name, image, flavor, files={}, nics=[]):
+def createServers(count, name, image, flavor, nw_name='public', **kwargs):
      servers = []
      srvs = []
      delay = 5
      build_time = 240 + delay * count
      for index in range(count):
           sname = name if count == 1 else "%s%s" % (name, index)
-          if files:
-               tmp_srv = cs.servers.create(sname, image, flavor, files=files)
-          else:
-               tmp_srv = cs.servers.create(sname, image, flavor)
+          tmp_srv = cs.servers.create(sname, image, flavor, **kwargs)
           servers.append(tmp_srv)
      print "Building Servers. Might take about  %s secs..." % (build_time)
      time.sleep(build_time)
@@ -63,19 +61,19 @@ def createServers(count, name, image, flavor, files={}):
           s.get()
           if s.status == 'ACTIVE':
                if s.networks:
-                    public = s.networks['public']
-                    if ":" in public[0]:
-                         publicv4 = public[1]
+                    ip = s.networks[nw_name]
+                    if ":" in ip[0]:
+                         ipv4 = ip[1]
                     else:
-                         publicv4 = public[0]
-                    print "%s: %s / %s" % (s.name, publicv4, s.adminPass)
+                         ipv4 = ip[0]
+                    print "%s: %s / %s" % (s.name, ipv4, s.adminPass)
                     srvs.append(s)
                else:
                     print "Server is Active but no network info found yet."
           elif s.status == "ERROR":
                print "Alas! something went wrong, rebuilding %s." % s.name
                s.delete()
-               s = cs.servers.create(s.name, image, flavor)
+               s = cs.servers.create(s.name, image, flavor, **kwargs)
                servers.append(s)
           else:
                servers.append(s)
