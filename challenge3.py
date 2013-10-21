@@ -12,8 +12,7 @@ def listContainers():
     print "Available Containers:"
     for container in cloudfiles.list_containers():
         print "%s" % (container)
-    print cloudfiles.get_all_containers()
-    sys.exit(0)
+    #print cloudfiles.get_all_containers()
 
 def isContainer(container):
     ret = False
@@ -23,6 +22,21 @@ def isContainer(container):
             break
     return ret
 
+def listFiles(container):
+    pr = False
+    objs = cloudfiles.get_container_objects(container, full_listing=True)
+    if len(objs) > 100:
+        print "Found %s files, do you reallly want to continue [y/N]?" % len(objs)
+        ans = raw_input()
+        if ans.lower()[0] == 'y':
+           pr = True
+    else:
+        pr = True
+    if pr:    
+        for obj in objs:
+            print "%s" % (obj.name)
+    sys.exit(0)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Cloud File Creator.')
     parser.add_argument('-c', '--container', metavar='NAME',
@@ -31,10 +45,20 @@ if __name__ == '__main__':
                         help='Local directory to upload')
     parser.add_argument('-l', '--list-containers', action='store_true',
                         help='Prints the available containers of Cloud Files')
+    parser.add_argument('-f', '--list-files', action='store_true',
+                        help='Prints the available files in a container')
     args = parser.parse_args()
 
     if args.list_containers:
         listContainers()
+        sys.exit(0)
+    if args.list_files:
+        if isContainer(args.container):
+            listFiles(args.container)
+        else:
+            print "Invalid Container: %s" % (args.container)
+            sys.exit(1)
+        sys.exit(0)
 
     if args.directory:
         dir = args.directory
